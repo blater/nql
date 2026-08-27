@@ -242,7 +242,7 @@ and captured query rows are covered in the
 [DML reference](docs/user-manual.md#dml-input-reference).
 
 
-# Converting from one file format to another
+## Converting from one file format to another
 
 One more trick - you can directly convert files from one format to another, say JSON to XML, or XML to YAML, any combination of the 
 supported file types:
@@ -257,7 +257,7 @@ can output to JSON, YAML, XML, TOML, JSONL, CSV, TSV, and Markdown.
 _Beware! At this stage formatting and comments in the files are not preserved._
 
 
-## Install
+# Install
 
 | Platform | instructions | 
 | --- | --- | 
@@ -266,7 +266,7 @@ _Beware! At this stage formatting and comments in the files are not preserved._
 | Lunux x64 | This installs the latest NQL package directly<br>from GitHub Releases. Rerun the same command to upgrade.<br>`curl -fsSL https://raw.githubusercontent.com/blater/nql/master/util/install-linux.sh` |
 
 
-## CLI usage
+# CLI usage
 
 NQL uses positional operands for the main inputs and flags for optional changes
 or explicit disambiguation:
@@ -303,7 +303,47 @@ Common flag groups:
 Run `nql help <command>` for command-specific syntax and examples.
 
 
-### Connecting to a database
+
+# Where NQL fits
+
+NQL is intended for work that crosses document and relational boundaries:
+
+- exporting joined database data into a deliberate JSON, YAML, or XML shape;
+- applying JSON, YAML, TOML, XML, CSV, TSV, or Parquet data through database DML;
+- joining or aggregating related collections inside structured files;
+- replacing one-off data movement code with a checked-in SQL-like script.
+
+Use a focused tool when the task stays inside a simpler boundary:
+
+- jq for JSON-native filtering and editing;
+- yq or Dasel for direct YAML or document edits;
+- Remarshal for guarded format conversion;
+- Miller for record-stream processing;
+- DuckDB or another SQL-over-file tool for primarily analytical, tabular work.
+
+The [comparison guide](docs/comparison.md) describes these boundaries in more
+detail.
+
+
+
+
+## Documentation
+
+- [Installation](docs/install.md)
+- [Task-oriented recipes](docs/recipes/README.md)
+- [User manual](docs/user-manual.md)
+- [Automation and CI/CD](docs/automation.md)
+- [Troubleshooting](docs/troubleshooting.md)
+- [Frequently asked questions](docs/faq.md)
+
+NQL is licensed under the [GNU Affero General Public License v3.0](LICENSE.txt).
+
+
+---
+
+# Appendix 
+
+## Connecting to a database
 
 You can supply all the parameters on the command line
 
@@ -328,28 +368,6 @@ Additional driver profiles are available when building from source. The JVM
 build can also load a driver JAR at runtime.
 
 
-
-
-
-## Where NQL fits
-
-NQL is intended for work that crosses document and relational boundaries:
-
-- exporting joined database data into a deliberate JSON, YAML, or XML shape;
-- applying JSON, YAML, TOML, XML, CSV, TSV, or Parquet data through database DML;
-- joining or aggregating related collections inside structured files;
-- replacing one-off data movement code with a checked-in SQL-like script.
-
-Use a focused tool when the task stays inside a simpler boundary:
-
-- jq for JSON-native filtering and editing;
-- yq or Dasel for direct YAML or document edits;
-- Remarshal for guarded format conversion;
-- Miller for record-stream processing;
-- DuckDB or another SQL-over-file tool for primarily analytical, tabular work.
-
-The [comparison guide](docs/comparison.md) describes these boundaries in more
-detail.
 
 ## Local caches speed repeated queries on the same large file
 
@@ -388,22 +406,9 @@ Exit statuses are stable: `0` for success, `1` for execution failure, `2` for
 invalid usage or configuration, and `130` when interrupted. See the
 [automation guide](docs/automation.md) for scripting and CI examples.
 
+--- 
 
-## Documentation
-
-- [Installation](docs/install.md)
-- [Task-oriented recipes](docs/recipes/README.md)
-- [User manual](docs/user-manual.md)
-- [Automation and CI/CD](docs/automation.md)
-- [Troubleshooting](docs/troubleshooting.md)
-- [Frequently asked questions](docs/faq.md)
-
-NQL is licensed under the [GNU Affero General Public License v3.0](LICENSE.txt).
-
-
----
-
-# Appendix - The ecommerce example database
+## The example data - ecommerce example database
 
  Here we have 4 tables showing a customer and their orders on a ecommerce site:
 
