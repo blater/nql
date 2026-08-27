@@ -1,5 +1,7 @@
 [![Latest release](https://img.shields.io/github/v/release/blater/nql)](https://github.com/blater/nql/releases/latest)
 
+# Query, Reshape, and Move Data Across Files and Databases with SQL
+
 NQL is a command-line tool for querying and moving data between JSON, YAML, TOML, XML, CSV, TSV files and relational databases.
 It provides a familiar SQL language for querying JSON, YAML, TOML, XML, CSV, TSV, JSONL, and Parquet files, extracting complex
 data structures into these formats from databases, and generally working with and reshaping data.
