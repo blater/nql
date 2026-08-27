@@ -65,7 +65,7 @@ final class CliCatalogBinding {
   private static void rejectParametersWithoutInput(
       CliParser.RawArguments raw, DataInput input) {
     if (input == null) {
-      CliParser.reject(raw.paramsFile == null && raw.params.isEmpty(),
+      CliParser.reject(raw.paramsFile != null || !raw.params.isEmpty(),
           "task parameters require catalog input data");
     }
   }

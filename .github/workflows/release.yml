@@ -154,6 +154,7 @@ jobs:
           VERSION: ${{ needs.validate.outputs.version }}
         run: |
           $ErrorActionPreference = "Stop"
+          $PSNativeCommandUseErrorActionPreference = $true
           $executable = ".\target\nql.exe"
           & $executable -h | Out-Null
           if ((& $executable --version) -ne "nql $env:VERSION") {
@@ -176,8 +177,8 @@ jobs:
           }
           & $executable --cache docs/examples/customers.json `
             --cache-dir "$env:RUNNER_TEMP\nql-cache" | Out-Null
-          '{}' | & $executable catalog `
-            --cache --cache-dir "$env:RUNNER_TEMP\nql-cache" | Out-Null
+          & $executable catalog '*' `
+            --cache-dir "$env:RUNNER_TEMP\nql-cache" | Out-Null
           $jdbc = & $executable 'output json; select 1 into {result.value};' `
             --input-text '{}' `
             --db h2 --database mem:release_smoke
