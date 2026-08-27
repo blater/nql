@@ -7,39 +7,43 @@ import blater.nql.inputreader.InputType;
 import java.nio.file.Path;
 import java.util.function.Supplier;
 
-/** Compatibility facade for shared invocation binding services. */
-final class CliBindingSupport {
-  private final CliInvocationSupport delegate;
+/** Compatibility facade for shared invocation construction services. */
+final class CliInvocationSupport {
+  private final CliInputSupport input;
+  private final CliInvocationOptionsFactory options;
+  private final CliCacheInvocationSupport cache;
 
-  CliBindingSupport(Supplier<Path> userHome) {
-    delegate = new CliInvocationSupport(userHome);
+  CliInvocationSupport(Supplier<Path> userHome) {
+    input = new CliInputSupport();
+    options = new CliInvocationOptionsFactory();
+    cache = new CliCacheInvocationSupport(userHome);
   }
 
   DataInput dataInput(CliParser.RawArguments raw, String positional, boolean defaultStdin) {
-    return delegate.dataInput(raw, positional, defaultStdin);
+    return input.dataInput(raw, positional, defaultStdin);
   }
 
   InputType implicitInputType(CliParser.RawArguments raw) {
-    return delegate.implicitInputType(raw);
+    return input.implicitInputType(raw);
   }
 
   void validateParquetOptions(CliParser.RawArguments raw, InputType inputType) {
-    delegate.validateParquetOptions(raw, inputType);
+    input.validateParquetOptions(raw, inputType);
   }
 
   InvocationOptions invocationOptions(CliParser.RawArguments raw) {
-    return delegate.invocationOptions(raw);
+    return options.create(raw);
   }
 
   Path cacheDirectory(CliParser.RawArguments raw) {
-    return delegate.cacheDirectory(raw);
+    return cache.directory(raw);
   }
 
   String singleName(CliParser.RawArguments raw, String command) {
-    return delegate.singleName(raw, command);
+    return cache.singleName(raw, command);
   }
 
   void rejectDataOptions(CliParser.RawArguments raw, String command) {
-    delegate.rejectDataOptions(raw, command);
+    cache.rejectDataOptions(raw, command);
   }
 }

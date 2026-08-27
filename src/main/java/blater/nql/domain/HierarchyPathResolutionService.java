@@ -2,12 +2,12 @@ package blater.nql.domain;
 
 import blater.nql.runner.sql.domain.QueryResultRow;
 
-/** Compatibility facade for hierarchy path and keyed-node resolution. */
-final class HierarchyNodeResolver {
-  private final HierarchyPathResolver delegate = new HierarchyPathResolver();
+/** Compatibility facade for hierarchy path resolution and row-local identity. */
+class HierarchyPathResolutionService {
+  private final HierarchyPathTraversal traversal = new HierarchyPathTraversal();
 
   HierarchyKeyIndex keyIndex() {
-    return delegate.keyIndex();
+    return traversal.keyIndex();
   }
 
   Node resolveParent(
@@ -17,26 +17,26 @@ final class HierarchyNodeResolver {
       HierarchyPath path,
       QueryResultRow row,
       RowContext rowContext) {
-    return delegate.resolveParent(root, rootKind, plan, path, row, rowContext);
+    return traversal.resolveParent(root, rootKind, plan, path, row, rowContext);
   }
 
   KeyedPath keyedPath(MappingPlan plan, HierarchyPath path) {
-    return delegate.keyedPath(plan, path);
+    return traversal.keyedPath(plan, path);
   }
 
   KeyedPath repeatedPath(MappingPlan plan, HierarchyPath path) {
-    return delegate.repeatedPath(plan, path);
+    return traversal.repeatedPath(plan, path);
   }
 
   boolean flatRows(MappingPlan plan) {
-    return delegate.flatRows(plan);
+    return traversal.flatRows(plan);
   }
 
   void initializeInferredCollections(
       Node root, Hierarchy.RootKind rootKind, MappingPlan plan) {
-    delegate.initializeInferredCollections(root, rootKind, plan);
+    traversal.initializeInferredCollections(root, rootKind, plan);
   }
 
-  static class RowContext extends HierarchyPathResolver.RowContext {
+  static class RowContext extends HierarchyPathTraversal.RowContext {
   }
 }

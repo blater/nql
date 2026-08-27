@@ -8,40 +8,40 @@ import blater.nql.report.ReportFormat;
 
 import java.time.Duration;
 
-/** Compatibility facade for the CLI's typed-value converters. */
-final class CliValueParser {
-  private CliValueParser() {
+/** Compatibility facade for the CLI's typed-value conversion services. */
+final class CliValueConverters {
+  private CliValueConverters() {
   }
 
   static InputType inputType(String value) {
-    return CliValueConverters.inputType(value);
+    return CliFormatConverter.inputType(value);
   }
 
   static OutputType outputType(String value) {
-    return CliValueConverters.outputType(value);
+    return CliFormatConverter.outputType(value);
   }
 
   static ReportFormat reportFormat(String value) {
-    return CliValueConverters.reportFormat(value);
+    return CliFormatConverter.reportFormat(value);
   }
 
   static CacheName cacheName(String value) {
-    return CliValueConverters.cacheName(value);
+    return CliFormatConverter.cacheName(value);
   }
 
   static Duration age(String value) {
-    return CliValueConverters.age(value);
+    return CliAgeConverter.parse(value);
   }
 
   static boolean hasJdbc(CliParser.RawArguments raw) {
-    return CliValueConverters.hasJdbc(raw);
+    return CliJdbcConverter.hasOptions(raw);
   }
 
   static JdbcConnectionSpec jdbcConnection(CliParser.RawArguments raw) {
-    return CliValueConverters.jdbcConnection(raw);
+    return CliJdbcConverter.connection(raw);
   }
 
   static String knownDriver(String value) {
-    return CliValueConverters.knownDriver(value);
+    return CliJdbcDriver.known(value);
   }
 }
