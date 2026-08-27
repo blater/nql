@@ -105,62 +105,10 @@ select count(*) into {summary.customerCount}, min(name) into {summary.firstCusto
 
 ## Build complex documents with SQL joins and `into`
 
-A non-trivial example. Here we have 4 tables showing a customer and their orders on a ecommerce site:
+See the appendix for table details, this example is an ecommerce DB with tables for
+`customer`, `address`, `customer_order`, `order_item`
 
-| Table | Column | Type | Relationship |
-| --- | --- | --- | --- |
-| `customer` | `id` | integer | Primary key |
-|  | `name` | varchar(80) |  |
-| `address` | `id` | integer | Primary key |
-|  | `customer_id` | integer | Foreign key → `customer.id` |
-|  | `addr1` | varchar(80) |  |
-|  | `city` | varchar(30) |  |
-|  | `primary_residence` | char |  |
-| `customer_order` | `id` | integer | Primary key |
-|  | `customer_id` | integer | Foreign key → `customer.id` |
-|  | `ordered_on` | date |  |
-| `order_item` | `id` | integer | Primary key |
-|  | `order_id` | integer | Foreign key → `customer_order.id` |
-|  | `sku` | varchar(40) |  |
-|  | `quantity` | integer |  |
-
-**Customers**
-
-| ID   | NAME  |
-| ---- | ----- |
-| 1    | Alice |
-| 2    | Bob   |
-| 3    | Yuki  |
-
-**Address**
-
-| ID   | CUSTOMER_ID | ADDR1              |  CITY       | PRIMARY_RESIDENCE  |
-| ---- | ----------- | ------------------ | ----------- | ------------------ |
-| 1    | 1           | 21 acacia drive    | Tokyo       | Y                  |
-| 2    | 1           | 11 Downing Street  | London      | N                  |
-| 3    | 2           | 1 George Street    | Sydney      | Y                  |
-
-**Customer Order**
-
-| ID   | CUSTOMER_ID | ORDERED_ON  |
-| ---- | ----------- | ----------- |
-| 1001 | 1           | 2026-07-01  |
-| 1002 | 1           | 2026-07-15  |
-| 1003 | 2           | 2026-07-20  |
-
-**Order Item**
-
-| ID     | ORDER_ID  | SKU         | QUANTITY    |
-| ------ | --------- | ----------- | ----------- |
-| 1      | 1001      | TEA         | 2           |
-| 2      | 1001      | CAKE        | 1           |
-| 3      | 1002      | MUG         | 2           |
-| 4      | 1003      | COFFEE      | 1           |
-
-
-## More complex output 
-
-This example joins customers and their orders together in the DB with standard SQL and puts it into 
+The query joins customers and their orders together in the DB with standard SQL and puts it into 
 a different structure in the output json using the `into` statement:
 
 ```sql
@@ -451,3 +399,62 @@ invalid usage or configuration, and `130` when interrupted. See the
 - [Frequently asked questions](docs/faq.md)
 
 NQL is licensed under the [GNU Affero General Public License v3.0](LICENSE.txt).
+
+
+---
+
+# Appendix - The ecommerce example database
+
+ Here we have 4 tables showing a customer and their orders on a ecommerce site:
+
+| Table | Column | Type | Relationship |
+| --- | --- | --- | --- |
+| `customer` | `id` | integer | Primary key |
+|  | `name` | varchar(80) |  |
+| `address` | `id` | integer | Primary key |
+|  | `customer_id` | integer | Foreign key → `customer.id` |
+|  | `addr1` | varchar(80) |  |
+|  | `city` | varchar(30) |  |
+|  | `primary_residence` | char |  |
+| `customer_order` | `id` | integer | Primary key |
+|  | `customer_id` | integer | Foreign key → `customer.id` |
+|  | `ordered_on` | date |  |
+| `order_item` | `id` | integer | Primary key |
+|  | `order_id` | integer | Foreign key → `customer_order.id` |
+|  | `sku` | varchar(40) |  |
+|  | `quantity` | integer |  |
+
+**Customers**
+
+| ID   | NAME  |
+| ---- | ----- |
+| 1    | Alice |
+| 2    | Bob   |
+| 3    | Yuki  |
+
+**Address**
+
+| ID   | CUSTOMER_ID | ADDR1              |  CITY       | PRIMARY_RESIDENCE  |
+| ---- | ----------- | ------------------ | ----------- | ------------------ |
+| 1    | 1           | 21 acacia drive    | Tokyo       | Y                  |
+| 2    | 1           | 11 Downing Street  | London      | N                  |
+| 3    | 2           | 1 George Street    | Sydney      | Y                  |
+
+**Customer Order**
+
+| ID   | CUSTOMER_ID | ORDERED_ON  |
+| ---- | ----------- | ----------- |
+| 1001 | 1           | 2026-07-01  |
+| 1002 | 1           | 2026-07-15  |
+| 1003 | 2           | 2026-07-20  |
+
+**Order Item**
+
+| ID     | ORDER_ID  | SKU         | QUANTITY    |
+| ------ | --------- | ----------- | ----------- |
+| 1      | 1001      | TEA         | 2           |
+| 2      | 1001      | CAKE        | 1           |
+| 3      | 1002      | MUG         | 2           |
+| 4      | 1003      | COFFEE      | 1           |
+
+
