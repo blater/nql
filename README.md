@@ -103,7 +103,7 @@ select count(*) into {summary.customerCount}, min(name) into {summary.firstCusto
 }
 ```
 
-## Powerful Queries - Build nested documents from joined rows
+## Build complex documents with SQL joins and `into`
 
 A non-trivial example. Here we have 4 tables showing a customer and their orders on a ecommerce site:
 
