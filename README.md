@@ -1,84 +1,78 @@
 [![Latest release](https://img.shields.io/github/v/release/blater/nql)](https://github.com/blater/nql/releases/latest)
 
-# Query, Reshape, and Move Data Across Files and Databases with SQL
+# SQL for Files
 
 NQL is a command-line tool for querying and moving data between JSON, YAML, TOML, XML, CSV, TSV files and relational databases.
-It provides a familiar SQL language for querying JSON, YAML, TOML, XML, CSV, TSV, JSONL, and Parquet files, extracting complex
-data structures into these formats from databases, and generally working with and reshaping data.
-
 Full documentation: [NQL user manual](docs/user-manual.md).
-
-## Install
-
-| Platform | instructions | 
-| --- | --- | 
-| macOS ARM64 | `brew install blater/tap/nql` |
-| Windows x64 | Run from an administrator powershell<br>with Chocolatey installed. <br>`irm https://raw.githubusercontent.com/blater/nql/master/util/chocolatey/install.ps1` |
-| Lunux x64 | This installs the latest NQL package directly<br>from GitHub Releases. Rerun the same command to upgrade.<br>`curl -fsSL https://raw.githubusercontent.com/blater/nql/master/util/install-linux.sh` |
-
-
-## What does it do?
 
 You can run SQL queries directly against data files. For example given a json file 'users.json'
 ```json
-    {
-        "users": [
-          {"id": 1, "name": "Alice", "active": true},
-          {"id": 2, "name": "Bob", "active": false},
-          {"id": 3, "name": "Charlie", "active": true}
-        ],
-        "address": [
-          {"user_id": 1, "city": "New York"},
-          {"user_id": 2, "city": "New York"},
-          {"user_id": 3, "city": "London"}
-        ]
-    }
-  }
+{ 
+  "users": [
+    {"id": 1, "name": "Alice", "active": true},
+    {"id": 2, "name": "Bob", "active": false},
+    {"id": 3, "name": "Charlie", "active": true}
+  ],
+  address": [
+    {"user_id": 1, "city": "New York"},
+    {"user_id": 2, "city": "New York"},
+    {"user_id": 3, "city": "London"}
+  ]
+} }
 ```
 
 Get all the active users from the file:
 
-`nql "select name from users where active = 'true' order by id;" users.json`
-
-` [{"name":"Alice"},{"name":"Charlie"}] `
-
-You can use very complex selects. 
-This is because NQL treats arrays as tables and fields as columns so you can run SQL over them as if the file is a database.
-
-If your file has ID fields it can match on, then nql will also infer key relationships, allowing joins and subqueries:
 ```
-  nql "select u.id, u.name, u.active, a.city
-      from users u 
-      join address a on a.user_id = u.id 
-      order by u.id;" users.json 
+nql "select name from users where active = 'true' order by id;" users.json
+
+[
+  {"name":"Alice"},
+  {"name":"Charlie"}
+]
+`` 
+
+NQL treats arrays as tables and fields as columns so you can run SQL over a _file_  as if it was a database.
+If the file has ID fields it can match on, then nql will also infer key relationships, allowing joins and subqueries:
 ```
+nql "select u.id, u.name, u.active, a.city 
+    from users u  
+    join address a on a.user_id = u.id  
+    order by u.id;" users.json 
 
-If it can't infer then you can still tell it how to match fields with its `structure` keyword.
+[
+  { "id": 1, "name": "Alice", "active": true, "city": "New York" },
+  { "id": 2, "name": "Bob", "active": false, "city": "New York" },
+  { "id": 3, "name": "Charlie", "active": true, "city": "London" }
+]
+```
+_(If it can't infer then you'll need to tell it how to match fields - see the `structure` keyword in the manual)_
 
-You can insert into a database from the file - this example inserts it into the 'appusers' table (we're using a local H2 database):
+
+## Moving data into and out of a database from a file with NQL
+
+This example inserts data from the users.json file into the 'appusers' table in a local H2 database:
 ```
 nql "insert into appusers (id, username, active) values ({users.id}, {users.name}, {users.active});"  \
     users.json --db h2 --database file:./users-db`
 ```
+More advanced sql just works - you can use a where, you can use subselects etc etc.
 
-This updates the database `appusers` table:
+This updates matching users in the `appusers` table from the users.json file:
 ```
 nql "update appusers set isactive = {users.active} where id = {users.id};" \
     users.json --db h2 --database file:./users-db
 ```
 
-You can also conveniently convert from one format to another.
+Deleting data, this time sourcing the input from xml:
+```bash
+echo "<person><id>1</id></person>" | nql \
+  "delete from person where personid = {person.id};" \
+  -t xml
 ```
-nql users.json -o csv
-nql customers.json -o yaml
-nql customers.xml -o json
-```
-
-All of the commands operate on JSON/JSONL/YAML/ToML/XML/CSV/TSV input files and 
-can output to JSON, YAML, XML, TOML, JSONL, CSV, TSV, and Markdown.
 
 
-## Query a local H2 database
+## Getting data out of a database
 
 This complete example queries a local database and outputs YAML. 
 The output format can be controlled with "output <format>" in the script or by using `-o <format>` on the command line.
@@ -102,101 +96,12 @@ nql "output yaml; select id, name, city from customer order by id;" \
 Use the ***into*** clause to name fields or place individual values into specific places in the output. Note the use of SQL functions count and min - most SQL & complex constructs are supported:
 
 ```sql
-select
-  count(*) into {summary.customerCount},
-  min(name) into {summary.firstCustomer}
-from customer;
-```
+select count(*) into {summary.customerCount}, min(name) into {summary.firstCustomer} from customer;
 
-```json
 {"summary":{"customerCount":2,"firstCustomer":"Alice"}}
 ```
 
-## Updating a database from a JSON, XML, YAML, TOML, JSONL, CSV, or TSV file
-
-you can use all the usual SQL commands to insert/update/delete database data from a file or stream:
-
-Insert:
-```bash
-echo "person:{firstname:Barney, lastname:Rubble, city:London}" | \
-    nql "insert into person (firstname, lastname, city) values ({person.firstName}, {person.lastName}, {person.city});" \
-      -t yaml
-```
-Update:
-```bash
-echo "person:{id: 1, city:London}" | nql \
-  "update person set city = {person.city} where personid = {person.id};" \
-  -t yaml --config mydb.properties
-```
-Delete:
-```bash
-echo "<person><id>1</id></person>" | nql \
-  "delete from person where personid = {person.id};" \
-  -t xml
-```
-
-## Running literal sql 
-
-When running nql against a database you can also run literal sql commands with the `literal` keyword.
-For instance, create a table...
-
-```bash
-nql "
-   literal drop table if exists person;
-
-   literal create table person (
-     personid integer auto_increment primary key,
-     firstname varchar(80),
-     lastname varchar(80),
-     city varchar(80)
-   );
-" --db h2 --database file:./customer-demo
-```
-
-
-## Insert rows and return generated keys
-
-An insert can write database-assigned values back into its input hierarchy.
-This XML insert maps the generated key into `{person.id}`:
-
-```bash
-nql "output xml;
-   insert into person (firstname, lastname, city)
-   values ({person.firstName}, {person.lastName}, {person.city})
-   returns personid into {person.id};" \
-  -t xml \
-  --db h2 \
-  --database file:./customer-demo <<'XML'
-<?xml version="1.0" encoding="UTF-8"?>
-<person>
-  <firstName>Alice</firstName>
-  <lastName>Adams</lastName>
-  <city>London</city>
-</person>
-XML
-```
-
-The returned XML contains the generated ID:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<person>
-  <firstName>Alice</firstName>
-  <lastName>Adams</lastName>
-  <city>London</city>
-  <id>3</id>
-</person>
-```
-
-The `returns` keyword is also valid on updates when the database calculates 
-timestamps, versions, or other values.
-
-Stored-procedure calls, repeated child records, transactions, error policies,
-and captured query rows are covered in the
-[DML reference](docs/user-manual.md#dml-input-reference).
-
-
-## Build nested documents from joined rows
+## Powerful Queries - Build nested documents from joined rows
 
 A non-trivial example. Here we have 4 tables showing a customer and their orders on a ecommerce site:
 
@@ -218,6 +123,7 @@ A non-trivial example. Here we have 4 tables showing a customer and their orders
 |  | `quantity` | integer |  |
 
 **Customers**
+
 | ID   | NAME  |
 | ---- | ----- |
 | 1    | Alice |
@@ -225,6 +131,7 @@ A non-trivial example. Here we have 4 tables showing a customer and their orders
 | 3    | Yuki  |
 
 **Address**
+
 | ID   | CUSTOMER_ID | ADDR1              |  CITY       | PRIMARY_RESIDENCE  |
 | ---- | ----------- | ------------------ | ----------- | ------------------ |
 | 1    | 1           | 21 acacia drive    | Tokyo       | Y                  |
@@ -232,6 +139,7 @@ A non-trivial example. Here we have 4 tables showing a customer and their orders
 | 3    | 2           | 1 George Street    | Sydney      | Y                  |
 
 **Customer Order**
+
 | ID   | CUSTOMER_ID | ORDERED_ON  |
 | ---- | ----------- | ----------- |
 | 1001 | 1           | 2026-07-01  |
@@ -239,6 +147,7 @@ A non-trivial example. Here we have 4 tables showing a customer and their orders
 | 1003 | 2           | 2026-07-20  |
 
 **Order Item**
+
 | ID     | ORDER_ID  | SKU         | QUANTITY    |
 | ------ | --------- | ----------- | ----------- |
 | 1      | 1001      | TEA         | 2           |
@@ -317,8 +226,92 @@ The result contains each customer once and nests orders and items beneath it:
     }
   ]
 }
-
 ```
+
+
+# Converting from one file format to another
+
+You can also conveniently convert from one format to another, say JSON to XML, or XML to YAML, any combination of the 
+supported file types:
+```
+nql users.json -o csv
+nql customers.json -o yaml
+nql customers.xml -o json
+```
+
+All of the commands operate on JSON/JSONL/YAML/ToML/XML/CSV/TSV input files and 
+can output to JSON, YAML, XML, TOML, JSONL, CSV, TSV, and Markdown.
+
+
+
+## Running literal sql 
+
+When running nql against a database you can also run literal sql commands with the `literal` keyword.
+For instance, create a table...
+
+```bash
+nql "
+   literal drop table if exists person;
+
+   literal create table person (
+     personid integer auto_increment primary key,
+     firstname varchar(80),
+     lastname varchar(80),
+     city varchar(80)
+   );
+" --db h2 --database file:./customer-demo
+```
+
+
+## Insert rows and return generated keys
+
+An insert can write database-assigned values back into its input hierarchy.
+This XML insert maps the generated key into `{person.id}`:
+
+```bash
+nql "output xml;
+   insert into person (firstname, lastname, city)
+   values ({person.firstName}, {person.lastName}, {person.city})
+   returns personid into {person.id};" \
+  -t xml \
+  --db h2 \
+  --database file:./customer-demo <<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<person>
+  <firstName>Alice</firstName>
+  <lastName>Adams</lastName>
+  <city>London</city>
+</person>
+XML
+```
+
+The returned XML contains the generated ID:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<person>
+  <firstName>Alice</firstName>
+  <lastName>Adams</lastName>
+  <city>London</city>
+  <id>3</id>
+</person>
+```
+
+The `returns` keyword is also valid on updates when the database calculates 
+timestamps, versions, or other values.
+
+Stored-procedure calls, repeated child records, transactions, error policies,
+and captured query rows are covered in the
+[DML reference](docs/user-manual.md#dml-input-reference).
+
+## Install
+
+| Platform | instructions | 
+| --- | --- | 
+| macOS ARM64 | `brew install blater/tap/nql` |
+| Windows x64 | Run from an administrator powershell<br>with Chocolatey installed. <br>`irm https://raw.githubusercontent.com/blater/nql/master/util/chocolatey/install.ps1` |
+| Lunux x64 | This installs the latest NQL package directly<br>from GitHub Releases. Rerun the same command to upgrade.<br>`curl -fsSL https://raw.githubusercontent.com/blater/nql/master/util/install-linux.sh` |
+
 
 ## CLI usage
 
@@ -382,6 +375,29 @@ Additional driver profiles are available when building from source. The JVM
 build can also load a driver JAR at runtime.
 
 
+
+
+
+## Where NQL fits
+
+NQL is intended for work that crosses document and relational boundaries:
+
+- exporting joined database data into a deliberate JSON, YAML, or XML shape;
+- applying JSON, YAML, TOML, XML, CSV, TSV, or Parquet data through database DML;
+- joining or aggregating related collections inside structured files;
+- replacing one-off data movement code with a checked-in SQL-like script.
+
+Use a focused tool when the task stays inside a simpler boundary:
+
+- jq for JSON-native filtering and editing;
+- yq or Dasel for direct YAML or document edits;
+- Remarshal for guarded format conversion;
+- Miller for record-stream processing;
+- DuckDB or another SQL-over-file tool for primarily analytical, tabular work.
+
+The [comparison guide](docs/comparison.md) describes these boundaries in more
+detail.
+
 ## Local caches speed repeated queries on the same large file
 
 A query and input file use a temporary local database for that command. Use
@@ -418,28 +434,6 @@ selected JSON, JSONL, YAML, TOML, XML, CSV, TSV, or Markdown format.
 Exit statuses are stable: `0` for success, `1` for execution failure, `2` for
 invalid usage or configuration, and `130` when interrupted. See the
 [automation guide](docs/automation.md) for scripting and CI examples.
-
-
-## Where NQL fits
-
-NQL is intended for work that crosses document and relational boundaries:
-
-- exporting joined database data into a deliberate JSON, YAML, or XML shape;
-- applying JSON, YAML, TOML, XML, CSV, TSV, or Parquet data through database DML;
-- joining or aggregating related collections inside structured files;
-- replacing one-off data movement code with a checked-in SQL-like script.
-
-Use a focused tool when the task stays inside a simpler boundary:
-
-- jq for JSON-native filtering and editing;
-- yq or Dasel for direct YAML or document edits;
-- Remarshal for guarded format conversion;
-- Miller for record-stream processing;
-- DuckDB or another SQL-over-file tool for primarily analytical, tabular work.
-
-The [comparison guide](docs/comparison.md) describes these boundaries in more
-detail.
-
 
 
 ## Documentation
