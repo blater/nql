@@ -30,10 +30,11 @@ nql "select name from users where active = 'true' order by id;" users.json
   {"name":"Alice"},
   {"name":"Charlie"}
 ]
-`` 
+```
 
 NQL treats arrays as tables and fields as columns so you can run SQL over a _file_  as if it was a database.
 If the file has ID fields it can match on, then nql will also infer key relationships, allowing joins and subqueries:
+
 ```
 nql "select u.id, u.name, u.active, a.city 
     from users u  
@@ -46,6 +47,7 @@ nql "select u.id, u.name, u.active, a.city
   { "id": 3, "name": "Charlie", "active": true, "city": "London" }
 ]
 ```
+
 _(If it can't infer then you'll need to tell it how to match fields - see the `structure` keyword in the manual)_
 
 
@@ -80,9 +82,7 @@ The output format can be controlled with "output <format>" in the script or by u
 ```bash
 nql "output yaml; select id, name, city from customer order by id;" \
     --db h2 --database file:./customer-demo -o yaml
-```
 
-```yaml
 -
   id: "1"
   name: "Alice"
