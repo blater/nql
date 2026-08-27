@@ -74,10 +74,10 @@ echo "<person><id>1</id></person>" | nql \
 ```
 
 
-## Getting data out of a database
+# Get data out of a database into structured files
 
-This complete example queries a local database and outputs YAML. 
-The output format can be controlled with "output <format>" in the script or by using `-o <format>` on the command line.
+This example pulls data from the customer-demo database into YAML.  
+The format is controlled either with "output <format>" or with `-o <format>` on the command line.
 
 ```bash
 nql "output yaml; select id, name, city from customer order by id;" \
@@ -93,12 +93,14 @@ nql "output yaml; select id, name, city from customer order by id;" \
   city: "Bristol"
 ```
 
-Use the ***into*** clause to name fields or place individual values into specific places in the output. Note the use of SQL functions count and min - most SQL & complex constructs are supported:
+Use the ***into*** clause to rename fields or place them into specific places in the output. 
 
 ```sql
 select count(*) into {summary.customerCount}, min(name) into {summary.firstCustomer} from customer;
 
-{"summary":{"customerCount":2,"firstCustomer":"Alice"}}
+{
+  "summary": {"customerCount":2,"firstCustomer":"Alice"}
+}
 ```
 
 ## Powerful Queries - Build nested documents from joined rows
@@ -156,8 +158,10 @@ A non-trivial example. Here we have 4 tables showing a customer and their orders
 | 4      | 1003      | COFFEE      | 1           |
 
 
-We want to pull the data out a list of all customers and details of any orders they might have made. NQL shows JSON by default.
-We will create a SQL query that joins all the tables together and uses "into" to define the output structure:
+## More complex output 
+
+This example joins customers and their orders together in the DB with standard SQL and puts it into 
+a different structure in the output json using the `into` statement:
 
 ```sql
 select
@@ -229,21 +233,6 @@ The result contains each customer once and nests orders and items beneath it:
 ```
 
 
-# Converting from one file format to another
-
-You can also conveniently convert from one format to another, say JSON to XML, or XML to YAML, any combination of the 
-supported file types:
-```
-nql users.json -o csv
-nql customers.json -o yaml
-nql customers.xml -o json
-```
-
-All of the commands operate on JSON/JSONL/YAML/ToML/XML/CSV/TSV input files and 
-can output to JSON, YAML, XML, TOML, JSONL, CSV, TSV, and Markdown.
-
-
-
 ## Running literal sql 
 
 When running nql against a database you can also run literal sql commands with the `literal` keyword.
@@ -303,6 +292,22 @@ timestamps, versions, or other values.
 Stored-procedure calls, repeated child records, transactions, error policies,
 and captured query rows are covered in the
 [DML reference](docs/user-manual.md#dml-input-reference).
+
+
+# Converting from one file format to another
+
+One more trick - you can directly convert files from one format to another, say JSON to XML, or XML to YAML, any combination of the 
+supported file types:
+```
+nql users.json -o csv
+nql customers.json -o yaml
+nql customers.xml -o json
+```
+
+All of the commands operate on JSON/JSONL/YAML/ToML/XML/CSV/TSV input files and 
+can output to JSON, YAML, XML, TOML, JSONL, CSV, TSV, and Markdown.
+_Beware! At this stage formatting and comments in the files are not preserved._
+
 
 ## Install
 
