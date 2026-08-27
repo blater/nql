@@ -32,6 +32,17 @@ class CliParserCatalogTest {
   }
 
   @Test
+  void catalogWithoutInputOrPatternAlsoUsesTheActiveCacheFallback() {
+    var invocation = assertInstanceOf(
+        CatalogInvocation.class,
+        parser.parse("catalog", "--cache-dir", "build/catalog-cache"));
+
+    assertInstanceOf(InputSelection.Automatic.class, invocation.input());
+    assertInstanceOf(CatalogPattern.All.class, invocation.pattern());
+    assertInstanceOf(ExecutionTarget.InputOrActiveCache.class, invocation.target());
+  }
+
+  @Test
   void catalogRejectsTaskParametersWithoutInputData() {
     assertUsage("catalog", "*", "--param", "region=eu");
     assertUsage("catalog", "*", "--params-file", "params.json");

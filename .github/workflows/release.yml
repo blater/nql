@@ -177,7 +177,7 @@ jobs:
           }
           & $executable --cache docs/examples/customers.json `
             --cache-dir "$env:RUNNER_TEMP\nql-cache" | Out-Null
-          & $executable catalog '*' `
+          & $executable catalog `
             --cache-dir "$env:RUNNER_TEMP\nql-cache" | Out-Null
           $jdbc = & $executable 'output json; select 1 into {result.value};' `
             --input-text '{}' `
