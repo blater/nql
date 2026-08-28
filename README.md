@@ -2,10 +2,11 @@
 
 # SQL for Files
 
-NQL is a command-line tool for querying and moving data between JSON, YAML, TOML, XML, CSV, TSV files and relational databases.
-Full documentation: [NQL user manual](docs/user-manual.md).
+NQL works like jq but with SQL for querying JSON, YAML, TOML, XML, CSV, TSV files.
+It also lets you use SQL to ship data both ways between files and relational databases. No weird syntax.
 
-You can run SQL queries directly against data files. For example given a json file 'users.json'
+NQL treats json & yaml arrays as tables and fields as columns so you can run SQL over a file as if it were a database.
+
 ```json
 { 
   "users": [
@@ -18,40 +19,40 @@ You can run SQL queries directly against data files. For example given a json fi
     {"user_id": 2, "city": "New York"},
     {"user_id": 3, "city": "London"}
   ]
-} }
+} 
 ```
 
 Get all the active users from the file:
 
 ```
-nql "select name from users where active = 'true' order by id;" users.json
-
+nql "select name from users where active = true order by id;" users.json
 [
   {"name":"Alice"},
   {"name":"Charlie"}
 ]
 ```
+If the file has ID fields it can match on then nql will infer key relationships for SQL joins. 
+You can also change the shape of the output - here we will create a json object 'customer' instead of user with the "into" keyword, and we will merge the user and address blocks together. 
 
-NQL treats arrays as tables and fields as columns so you can run SQL over a _file_  as if it was a database.
-If the file has ID fields it can match on, then nql will also infer key relationships, allowing joins and subqueries:
-
-```
-nql "select u.id, u.name, u.active, a.city 
+```sql
+nql "select u.id into {customer.id}, u.name into {customer.name}, 
+            u.active into {customer.valid}, a.city into {customer.location}
     from users u  
     join address a on a.user_id = u.id  
-    order by u.id;" users.json 
-
+    order by u.id;"  users.json 
 [
-  { "id": 1, "name": "Alice", "active": true, "city": "New York" },
-  { "id": 2, "name": "Bob", "active": false, "city": "New York" },
-  { "id": 3, "name": "Charlie", "active": true, "city": "London" }
+ {"customer": {"id":1,"name":"Alice",  "valid":true, "location":"New York"}},
+ {"customer": {"id":2,"name":"Bob",    "valid":false,"location":"New York"}},
+ {"customer": {"id":3,"name":"Charlie","valid":true, "location":"London"}}
 ]
+
 ```
 
-_(If it can't infer then you'll need to tell it how to match fields - see the `structure` keyword in the manual)_
+_(If it can't infer the relationships you'll get a warning and you can tell it explicitly to match fields - see the `structure` keyword in the manual)_
 
 
-## Moving data into and out of a database from a file with NQL
+
+## Shipping data into and out of a database from a file with NQL
 
 This example inserts data from the users.json file into the 'appusers' table in a local H2 database:
 ```
@@ -329,9 +330,9 @@ detail.
 
 ## Documentation
 
+- [User manual](docs/user-manual.md)  Start here!
 - [Installation](docs/install.md)
 - [Task-oriented recipes](docs/recipes/README.md)
-- [User manual](docs/user-manual.md)
 - [Automation and CI/CD](docs/automation.md)
 - [Troubleshooting](docs/troubleshooting.md)
 - [Frequently asked questions](docs/faq.md)
