@@ -14,7 +14,7 @@ NQL treats json & yaml arrays as tables and fields as columns so you can run SQL
     {"id": 2, "name": "Bob", "active": false},
     {"id": 3, "name": "Charlie", "active": true}
   ],
-  address": [
+  "address": [
     {"user_id": 1, "city": "New York"},
     {"user_id": 2, "city": "New York"},
     {"user_id": 3, "city": "London"}
